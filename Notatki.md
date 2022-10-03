@@ -80,8 +80,9 @@ zwalnianie zasobów.
 * Używane do znajdowania maksymalnego zwiększenia wydajności całkowitej jeśli ulepszamy część systemu
 * Pozwala znaleść wydajność całego systemu gdy zmieniamy pewną część
 * Mając wiele procecorów dokładanie kolejnego zmniesza zysk
-
-[comment]: <> (TODO dodać wzór na prawo )
+* $\alpha$ - liczba operacji sekwencyjnych<br>
+$P$ - liczba procesorów
+$$S = \frac{1}{\alpha + \frac{1 - \alpha}{P}}$$
 
 ### Bazy relacyjne
 
