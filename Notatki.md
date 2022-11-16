@@ -109,6 +109,7 @@ reguły). Nie zawiera anomali wynikających ze współbierznego dostęu do danyc
 * Lepsza dostępność ale niespójność danych
 * Krótki czas życia, ale elastyczne przy różnych danych
 
+
 ## Wykład nr 2
 
 --- 
@@ -196,14 +197,180 @@ Nazwa modelu pochodzi od tabeli (ang. relation), a nie od związków między tab
 * Iloczyn mnogościowa $R \cap S$ - zbiór krótek które należą jednocześnie do $R$ i $S$
 * Różnica mnogościowa $R - S$ - zbiór krótek które należą do $R$ i nie należą do $S$
 * Iloczyn kartezjański $R \times S$ - zbiór wszystkich par krótek w których pierwszy element pary należy do $R$ drugi do $S$. 
-* Selekcja $\sigma_C(R)$ - wybranie z tabeli %R% krotki spełniające warunek wyboru $C$
+* Selekcja $\sigma_C(R)$ - wybranie z tabeli $R$ krotki spełniające warunek wyboru $C$
 * Rzutowanie $\pi A_1,A_2,...(R)$ - wybranie z tabeli $R$ tylko kolumn obecnych na liście rzutowania $A_1,A_2,...$
 * Przemianowanie $\rho_{S(B_1, B_2,...)}(R)$ - zmiana nazwy atrybutów w tabeli R na $B_1,B_2,...$
 * Złączenie $R \Join_{C(R,S)}S$ - podzbiór iloczynu kartezjańskiego $R \times S$ który obejmuje tylko krotki spełniające warunek złączenia $C(R,S)$
     * Złączenie równościowe - złączone tabele mają takie same atrybuty (powtarzające się w obu tabelach), a złączenie obejmuje tylko równość powtarzających się atrybutów
     * Złączenie naturalne - złączenie równościowe po wszystkich powtarzających się kolumnach 
 
+
 ## Wykład nr 3
+
+---
+
+### Zależności funkcyjne 
+
+$ X = {A_1, A_2, ..., A_n} $<br>
+$ Y = {B_1, B_2, ..., B_m} $<br>
+$ Z = {C_1, C_2, ...} $
+
+Mówimy że zbiór atrybutów Y **zależy funkcyjnie** od zbioru atrybutów X wtedy i tylko wtedy, gdy każda ustalona wartość X jest **jednoznacznie** powiązana z wartością Y. Zapisujemy je w postaci:
+
+$$
+A_1, A_2, ..., A_n \rightarrow B_1, B_2, ..., B_m\\
+X \rightarrow Y
+$$
+
+Alternatywnie mówimy że jeśłi dwie krotki w tabeli są zgodne w atrybutach X to musza być zgodne w atrybutach Y.
+
+* Zależności funkcyjne są więzami nałożonymi na dopuszczalne wartości danych 
+* Zależności funkcyjne odkrywamy w procesie analizy fragemntu rzeczywistości który baza ma opisywać
+* Zależności należą do schematu bazy
+* Zależności są matematycznym modelem więzów jednoznaczoności w relacyjnym modelu
+* O zależnościach nie możęmy jedynie wnioskować na podstawie instancji tabel
+
+### Zależności trywialne 
+
+Trywialna zależność funkcyjna to zależność $A_1, A_2, ..., A_n \rightarrow B$ w której atrybut B jest równy któremuś atrybutowi w $A_{1, 2, ..., n}$
+
+* **Trywialna** jeśli zbiór złożony z atrybutów B jest podzbiorem zbioru atrybutów A
+* **Nietrywialna** jeśli co najmniej jednen B nie jest A 
+* **Całkowicie** nietrywaialna jeśli żaden B nie jest A
+    
+### Reguły wnioskowania (aksjomaty Armstronga)
+
+* Zwrotność 
+
+    Jeżeli $\{B_1, B_2, ..., B_m\} \subseteq \{A_1, A_2, ..., A_n\}$, to $A_1, A_2, ..., A_n \rightarrow B_1, B_2, ..., B_m$
+* Rozszerzenie
+
+    Jeżeli $A_1, A_2, ..., A_n \rightarrow B_1, B_2, ..., B_m$, to $A_1, A_2, ..., A_n, C_1, C_2, ..., C_k \rightarrow B_1, B_2, ..., B_m, C_1, C_2, ..., C_k$ dla dowolnych $C_1, C_2, ..., C_k$
+
+* Przechodniość 
+
+    Jeżeli $A_1, A_2, ..., A_n \rightarrow B_1, B_2, ..., B_m$ oraz $B_1, B_2, ..., B_m \rightarrow C_1, C_2, ..., C_k$, to $A_1, A_2, ..., A_n \rightarrow C_1, C_2, ..., C_k$
+
+* Sumowanie
+
+    Jeżeli X $\rightarrow$ Y oraz X $\rightarrow$ Z, wtedy X $\rightarrow$ Y, Z  
+
+* Rozkład 
+
+    Jeżeli X $\rightarrow$ Y oraz Z $\subseteq$ Y, to X $\rightarrow$ Z 
+
+* Pseudoprzechodniość
+
+    Jeżeli X $\rightarrow$ Y oraz Y, Z $\rightarrow$ W, to X, Z $\rightarrow$ W
+
+### Domknięcia
+
+$\{A_1, A_2, ..., A_n\}$ jest zbiorem atrybutów, S jest zbiorem zależności funkcyjnych. Domnięciem tego zbioru nad S nazywamy taki zbiór atrybutów B, taki że jeśli jego elementy spełniają wszystkie zależności funkcyjne z S, to spełniają także zależność $A_1, A_2, ..., A_n \rightarrow B$, a zatem zależność $A_1, A_2, ..., A_n \rightarrow B$ wynika z S.
+
+* Algorytm obliczania domknięć:
+
+    1. Niech X oznacza zbiór $\{A_1, A_2, ..., A_n\}$
+    2. Znajdujemy wszystkie zależności funkcjyjne postaci $B_1, B_2, ..., B_m \rightarrow C$, gdzie $B_i$ należą do X i C nie należy. Dołączamy C do X.
+    3. Powtarzamy krok 2 tyle ile da się dołączyć jakiś nowy atrybut. Po skończonej liczbie kroków nie da się już nic dodać do X.
+
+* Algorytm ten jest prosty ale mało efektywny - w najgorszym przypadku w czasie kwadratowym.
+
+### Bazy zależności funkcyjnych 
+
+**Baza zbioru zależności funkcyjnych** - każdy zbiór zależnośc funkcyjnych pewniego zbioru atrybutów z którego można wyprowadzić wszystkie inne zależności funkcyjne
+
+**Baza minimalna** - baza w której żaden podzbiór bazy nie jest bazą
+
+### Klucze
+
+Zbiór atrybutów $\{A_1, A_2, ..., A_n\}$ tworzy **klucz**, jeśli wszystkie pozostały atrybuty są funkcyjnie zależne od wskazanego zbioru. 
+
+> Dwie różna krotki nie mogą mieć tych samych kluczy.
+
+**Klucz minimalny** to klucz złożony z jak najmniejszej ilość atrybutów.
+
+**Nadklucz** to jest to każdy nadzbiór klucza minimalnego.
+
+> Obliczanie dokmnięć jest formalnym narzędziem służącym do identyfikacji klucza.
+
+### Pierwsza postać normalna
+
+1. Tabela posiada klucz
+2. Wszystkie składowe krotek są atomowe
+
+> Pierwsza postać normalna jest warunkiem by baza była w systemie relacyjnym. Warunek posiadania krotek jest równoważny temu, że tabela jest zbiorek krotek. 
+
+### Atomowość danych 
+
+Składowych krotek nie można podzielić.
+
+> Warunek atomowości krotek uniemożliwia aby składowe były złożone struktury danych.
+
+### Anomalie baz danych 
+
+* Redundancja - ta sama infirmacja niepotrzebnie przechowywana w kilku krotkach 
+* Anomalia modyfikacji - informacja może zostać zmodyfikowana tylko w pewnych krotkach
+* Anomalia usuwania - usinięcie części danych powoduję utratę innej informacji
+* Anomalia dołączania - wprowadzenie informacji jest możliwe tylko gdy wprowadzamy inną informację (chwilowo niedostęoną)
+
+### Druga postać normalna
+
+1. Tabela jest 1PN
+2. Wszystkie atrybuty, które nie należą do klucza zależą funkcyjnie od pełnego klucza
+
+### Złączenie bezstratne
+
+Normalizację przeprowadzamy poprzez dzielenie tabeli na tabele potomne. 
+
+> Wymogiem jest aby te tabale pozwalały na pełne odtworzenie informacji po dokonaniu złączenia naturalnego.
+
+**Dekompozycja bezstratnego złączenia** to podział tabeli R na tabele $R_1, R_2, ..., R_n$ takie że ich naturalne złączenie jest równe tabeli R.
+
+### Twierdzenie Heatha
+
+Tabelę R o atrybutach X, Y, Z, spełniającą zależność funkcyjną X $\rightarrow$ Y możn bezstratnie zdekomponować na wyniku rzutowania $R_1 = \pi_{XY}(R)$ oraz $R_2 = \pi_{XZ}(R)$
+
+### Trzecia postać normalna
+
+1. Tabela jest 2PN
+2. Dla wszystkich atrybutów tabeli zachodzi:
+
+    Jeżeli $A_1, A_2, ..., A_n \rightarrow A_m$, to albo $\{A_1, A_2, ..., A_n\}$ jest nadkluczem albo $A_m$ jest elementem innego klucza.
+
+### Zależności przechodnie i cykliczne
+
+* Przechodznie 
+
+    Jeśli w tabeli nie występują zależności cykliczne to 3PN zakazuje wystęowania zależności przechodnich.
+
+* Cykliczne
+
+    W tych zależnościach są zależności przechodnie ale atrybuty niekluczowe są elementami innych kluczy. 
+
+### Postać normalne Boyce'a Codda (BNCF)
+
+1. Jest 2PN
+2. Dla każdej zależności nietrywaialnej, jeżeli $A_1, A_2, ..., A_n \rightarrow A_m$, to $\{A_1, A_2, ..., A_n\}$ jest nadkluczem.
+
+> Każda tabela BCNF jest też w 3PN ale nie odwrotnie!
+
+> Nie każdą tabelę da się znormalizować do BCNF, priorytetem jest zachowanie zależności funkcyjnych oraz bezstratności złączeń.
+
+### Zależności wielowartościowe
+
+Zbiory X, Y są związane zależnośćią wielowartościową, co zapisujemy $X \rightarrow\rightarrow Y$ jeżeli po utworzeniu zbioru wszystkich kombinacji $x_cyz$ realnie występujących w tabeli stwierdzamy, że $x_c$ jest stowarzyszone z tymi samymi wartościami y bez względu na wartość z. 
+
+> Zależności wielowartościowe nie odnoszą się do schematu a do instancji tabeli.
+
+### Czwarta postać normalna 
+
+1. Jest 3PN
+2. Dla każdej nietrywaialnej zależności wielowartościowej $A \rightarrow\rightarrow B$, A jest nadkluczem.
+
+> Każda tabela BCNF, która nie zawiera nietrywaialnych zależności wielowartościowych jest 4PN.
+
+
+## Wykład nr 4
 
 ---
 
