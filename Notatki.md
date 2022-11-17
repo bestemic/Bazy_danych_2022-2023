@@ -374,4 +374,93 @@ Zbiory X, Y są związane zależnośćią wielowartościową, co zapisujemy $X \
 
 ---
 
+### SQL (Structured Query Language)
+
+Jest to interpretowany język programowania. Jego polecenia nazywamy zapytaniami. 
+
+* Części SQL 
+    * DDL (Data Definition Language) - zmiany schematu, tworzenie, usuwanie, modifikacja tabel i indeksów
+    * DML (Data Manipolation Language) - wprowadzanie, modyfikowanie i usuwanie danych
+    * DQL (Data Query Language) - właściwy język zapytań
+    * DCL (Data Control Language) - nadawanie uprawnień do obiektów bazodanowych 
+* SQL jest językiem deklaratywnym (mówimy co chcemy osiągnąć bez podania jak to osiągnąć)
+
+### SELECT
+
+Służy do uzyskiwania zawartości tabeli lub obliczeń matematycznych.
+
+### Zmienne tymczasowe 
+
+Zmienne tymczasowe definiujemy poprzez:
+
+```sql
+SET @nazwaZmiennej=wartość;
+```
+
+Do zmiennej możemy również przypisać wynik zapytania oraz istnieje dopóki nie zakończy się połączenie z serwerem.
+
+### Tworzenie bazy danych 
+
+1. Utworzenie bazy
+    ```sql
+    CREATE DATABASE nazwaBazy
+    ```
+2. Wejście do bazy
+    ```sql
+    USE nazwaBazy
+    ```
+3. Wyświetlenie listy baz danych na serwerze 
+    ```sql
+    SHOW DATABASES
+    ```
+4. Tworzenie tabeli 
+    ```sql
+    CREATE TABLE nazwaTabeli (definicja pól)
+    ```
+5. Dodawanie kolumny do tabeli
+    ```sql
+    ALTER TABLE nazwaTabeli
+    ADD COLUMN (dofinicja kolumny)
+    ```
+6. Uzyskanie definicji tabeli
+    ```sql
+    DESCRIBE nazwaTabeli
+    ```
+7. Wstawianie wartości 
+    ```sql
+    INSERT INTO nazwaTabeli VALUES
+    (wartości) 
+    ```
+8. Zmiana wartości
+    ```sql
+    UPDATE nazwaTabeli 
+    SET nazwaKolumny = wartość
+    WHERE warunek
+    ```
+9. Usuwanie z tabeli 
+    ```sql
+    DELETE FROM nazwaTabeli
+    WHERE warunek
+    ```
+10. Usuwanie tabeli
+    ```sql
+    DROP nazwaTabeli
+    ```
+
+### Porównywanie napisów
+
+```sql
+WHERE nazwaPola LIKE warunek
+```
+
+% - 0 lub więcej znaków <br>
+_ - pojedynczy znak <br>
+[] - pojednyczy znak z zakresu <br>
+[^] - pojednyczy znak z poza zakresu
+
+
+## Wykład nr 5
+
+---
+
 cdn.
