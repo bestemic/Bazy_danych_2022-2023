@@ -463,4 +463,173 @@ _ - pojedynczy znak <br>
 
 ---
 
+### Złączenia teoriomnogościowe
+
+* UNION
+
+    Złączenie wyników kilku zapytań w jednym zestawieniu. Powtarzające wiersze nie są wybierane i wyniki są sortowane.
+
+    ```sql
+    SELECT * FROM tabela1
+    UNION
+    SELECT * FROM tabela2
+    ```
+
+* UNION ALL 
+
+    Zwraca złączenie wszystkich wyników z duplikatami.
+
+    ```sql
+    SELECT * FROM tabela1
+    UNION ALL
+    SELECT * FROM tabela2
+    ```
+
+* CROSS JOIN
+
+    Zwraca wszystkie możliwe kombinacje jakie były w wierszach łączonych tabel.
+
+    ```sql
+    SELECT tabela1.kolumna1 AS t1k1, tabela1.kolumna2 AS t1k2, tabela2.kolumna1 AS t2k1, tabela2.kolumna2 AS t2k2
+    FROM tabela1 CROSS JOIN tabela2
+    ```
+
+* INTERSECT 
+
+    Zwraca tylko wspólne wiersze.
+
+    ```sql
+    SELECT * FROM tabela1
+    INTERSECT
+    SELECT * FROM tabela2
+    ```
+
+### Złączenie wewnętrzne
+
+Jest to podzbiór iloczynu kartezjańskiego spełniający podane warunki złączenia.
+
+```sql
+SELECT * FROM tabela1 JOIN tabela2 ON warunek
+```
+
+W momencie gdy mamy w onu tabelach takie same nazwy kolumn to wykonując złączenie musimy się odnieść do nazwy tabeli. W takim przypadku można też użyć konstrukcji z USING
+
+```sql
+SELECT * FROM tabela1 JOIN tabela2 
+USING (kolumna)
+```
+
+### Złączenie naturalne 
+
+Łączy po wszystkich powtarzających się kolumnach. A tylko jeden powtarzający się atrybut dodawany jest do wyniku.
+
+```sql
+SELECT * FROM tabela1 NATURAL JOIN tabela2
+```
+
+### Złączenie $\theta$ (theta)
+
+Warunek złączenia zapisujemy w WHERE
+
+```sql
+SELECT tabela1.kolumna1 AS t1k1, tabela1.kolumna2 AS t1k2, tabela2.kolumna1 AS t2k1, tabela2.kolumna2 AS t2k2
+FROM tabela1, tabela2
+WHERE warunek
+```
+
+### Złączenia zewnętrzne
+
+Ten typ złączeń może obejmować krotki które nie należą do iloczynu kartezjańskiego tabel wejściowych.
+
+* RIGHT JOIN
+
+    Zwracane są wszystkie rekordy z prawej tabeli i pasujące rekordy z lewej tabeli. Tam gdzie nie ma dopasowania dla elementów z prawej tabeli w lewej uzupełniane są `NULL`.
+
+    ```sql
+    SELECT * FROM tabela1 RIGHT JOIN tabela2
+    ON warunek
+    ```
+
+* LEFT JOIN
+
+    Zwracane są wszystkie rekordy z lewej tabeli i pasujące rekordy z prawej tabeli. Tam gdzie nie ma dopasowania dla elementów z lewej tabeli w prawej uzupełniane są `NULL`.
+
+    ```sql
+    SELECT * FROM tabela1 LEFT JOIN tabela2
+    ON warunek
+    ```
+
+* Pełne złączenie zewnętrzne
+
+    Jest połączeniem lewego i prawego złączenia.
+
+    ```sql
+    SELECT * FROM tabela1 RIGHT JOIN tabela2
+    ON warunek
+    UNION 
+    SELECT * FROM tabela1 LEFT JOIN tabela2
+    ON warunek
+    ```
+
+* INNER JOIN
+
+    Zwraca tylko te dane które są złączeniem obu tabel i mają odpoweidniki w drugiej tabeli.
+
+    ```sql
+    SELECT * FROM tabela1 INNER JOIN tabela2
+    ON warunek
+    ```
+
+### Typy złączeń
+
+* Proste
+* Drzewiaste
+* Zapętlone
+
+### Podzapytanie
+
+Jest to zapytanie SQL umieszczone wewnątrz innego zapytania. 
+
+* Tworzenie strukturalnych podzapytań 
+* Izolowanie poszczególnych instrukcji
+* Alternatywne rozwiązania dla skomplikowanych złączeń
+* Większa czytelność kodu
+
+Możemy też zamiast zapytania do tabeli wykonywać zapytanie do wyniku innego podzapytania albo użyć podzapytania jako wyrażenie w liście polecenia `SELECT`
+
+### Operatory podzapytań
+
+* ANY
+
+    Coś musi spełnić relację z miniumum jedną wartością z drugiej relacji.
+
+* IN
+
+    Coś musi być równe minumum jednej wartości z innej relacji.
+
+* ALL
+
+    Coś musi spełnić relacją z każdym wynikiem innej relacji.
+
+* EXISTS
+
+    Warunek jest prawdziwy jeśli podzapytanie zwraca niepusty zbiór wierszy.
+
+### Podzapytania skorelowane
+
+W podzapytaniach możemy odwoływać się do kolumn występujących w zapytaniach zewnętrznych, wtedy powstaje podzapytanie skorelowane. 
+
+### Grupowanie
+
+Polega ono na utworzeniu **partycji** tabeli czyli rozbiciu jej na rozłączne części, których suma mnogściowa odtwarza tabelę. Przynależność do danej grupy określamy poprzez atrybuty. 
+
+### HAVING
+
+Zwracane są grupy spełniające tylko podane kryterium. Działa ona już po etapie grupowania i filtrowania danych.
+
+
+## Wykład nr 6
+
+---
+
 cdn.
