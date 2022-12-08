@@ -632,4 +632,117 @@ Zwracane są grupy spełniające tylko podane kryterium. Działa ona już po eta
 
 ---
 
+### Rodzaje tabel
+
+* tabela podstawowa - jest to tabale utworozna przy pomocy `CREATE TABLE`
+* tabela pochodna - jest to wynik każdego zapytania `SELECT` 
+* underlying tables - tabela użyta do stworzenia widoków
+
+### Widok
+
+Jest to trwała definicja tabeli pochodnej. Definicja taka przechowywana jest w bazie. Widoki używamy aby ograniczać dostęp danych dla okreslonych użytkowników. 
+
+### Tworzenie widoku
+
+1. Słowo kluczowe `CREATE VIEW`
+2. Nazwa widoku
+3. Słowo kluczowe `AS`
+4. Treść zapytania które buduje nam widok
+
+Widok nazywamy alaisem gdy zwraca nam cąłą tabelę podstawową.
+
+Widok możemy też tworzyć na podstawie innych widoków. 
+
+Widoki reagują na zmianę danych w tabelach których użyto do ich stworzenia. Ale nie reagują one na zmianę definicji tabeli, o ile nie narusza ona integralności widoku.
+
+### Widoki modyfikowalne 
+
+Zmiana danych w widoku może powodować zmianę danych w tabelach używanych do stowrzenia widoku. Ale nie da się dodać lub zmienić wiersza w momencie gdy zmiana ta naruszyła by więzy integralności widoku. 
+
+Wiersza możęmy usówać z widoku tylko wtedy gdy SQL potrafi przetłumaczyć zapytanie usuwające wiersze z widoku na zapytanie usuwające wiersze z underlying table.
+
+### Widoki niemodyfikowalne
+
+Niektórych widoków nie możęmy modyfikować. Są to widoki które zawierają:
+
+- `UNION`
+- `UNION ALL`
+- `DISTINCT`
+- `DISTINCTROW`
+- inny widok niemodyfikowalny
+- podzapytanie
+
+### Więz `CHECK`
+
+Gdy w zapytaniu tworzącym widok mamy `WHERE` możęmy dodać więz `CHECK` który uniemożliwi zmodyfikowanie danych w widoku które naruszały by to ograniczenie.
+
+### Dangling views
+
+Są to widoki których tabela na której są budowane zostanie usunięta. 
+
+Aby dowiedzieć się czy dana tabela lub widok nie są uszkodzone używamy `CHECK TABLE nazwaTabeli`
+
+### Widoki zmaterializowane
+
+Są to widoki które fiycznie przechowują dane, tworzymy kopię danych będącej wynikiem zapytaniem zadanego tabeli na odległym lub rozproszonym serwerze. Dostęp do takich danych jest szybszy, ale co jakiś czas należy taki widok odświeżyć.
+
+> Dane w takich widokach mogą chwilowo łamać wymóg spójności danych.
+
+### Klucze obce 
+
+Jest to powiązanie indeksowanej kolumny jakiejś tabeli z indeksowaną kolumną innej tabeli co pozwala na automatyczne zmiany w powiązanych tabelach i nakłada więzy integralności.
+
+```SQL
+FOREIGN KEY (nazwaKolumny) REFERENCES nazwaTabeli (nazwaKolumny)
+    [{ON DELETE | ON UPDATE} {RESTRICT | CASCADE | SET NULL | NO ACTION}]
+```
+
+`ON DELETE` - sprawdzanie stanu przy usuwaniu
+
+`ON UPDATE` - sprawdzanie stanu przy modyfikacji
+
+`RESTRICT` - nie pozwala na dokonanie zmian naruszającyh powiązanie
+
+`CASCADE` - nakazuje na propagację kaskadową zmian wzdłóż drzewa powiązanych tabel
+
+`SET NULL` - ustawia odpowiednie atrybuty powiązanych tabel, dotąd wskazujący na element klucza obcego na wartość `NULL` 
+
+`NO ACTION` - wyłącza mechanizm klucza obcego dla danej operacji
+
+### Wyzwalacze
+
+Są to procedury wykonywane automatycznie po zmianie zawartości wskazanej tabeli.
+
+```SQL
+CREATE TRIGGER nazwa
+{BEFORE | AFTER} {INSERT | UPDATE | DELETE}
+ON nazwaTabeli
+FOR EACH ROW
+wyrażenieSQL
+```
+
+> Nogą się odwoływać tylko do trwałych tabel podstawowych. I może być co najwyżej jeden typ wyzwalacza na tabelę.
+
+> Wyzwalacze nie są uruchamiane przez zdarzenia kaskadowe kluczy obcych.
+
+> Wyzwalacz nie może zacząć, skończyć i odwołać transakcji.
+
+### Do czego wyzwalacze?
+
+- Zapisywanie w logu danych dotyczących zmian
+- Uruchamianie kaskady zdarzeń `DELETE` i `UPDATE`
+- Automatyzowanie operacji które powinny być wykonane po zmianie wiersza w jakiejś tabeli
+- Wyzwalaczy możemy używać do modyfikacji wielkości zapisanych w innych tabelach niż w tabeli w której zdefiniowano wyzwalacz
+
+### Wady wyzwalaczy 
+
+- Błędy spowodowane ich działaniem trudne do wytropienia
+- Użytkownicy zaskoczeniu zmianami
+- Wyzwalacz modyfikujący tabele z wyzwalaczem może spowodować nawałnicę wyzwalaczy
+
+
+## Wykład nr 7
+
+---
+
 cdn.
