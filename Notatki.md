@@ -745,4 +745,300 @@ wyrażenieSQL
 
 ---
 
-cdn.
+### Transakcje
+
+Są to zbiory operacji w bazie danych stanowiące pewną całość i jako takie powinny być wykonane w całośći wszystkie lub żadna z nich. Jeżeli wystąpi jakiś błąd to całą sekwencję operacji można cofnąć i przywrócić bazę do stanu sprzed rozpoczęcia sekwencji. W przypadku systemu wielodostępowego ważne jest też zapewnienie aby procesy odwołujące się do tych samych tabel nie kłóciły się ze sobą. 
+
+> **Spójność danych w bazie rozproszonej** - każdy serwer musi zwrócić taką samą odpowiedź na dane zapytania gdy zadajemy je w tym samym czasie.
+
+```SQL
+START TRANSACTION;
+zapytanie1;
+...
+zapytanieN;
+COMMIT; -- zatwierdza zmiany
+ROLLBACK; -- odrzuca zmiany
+```
+
+### Zasady ACID
+
+- Atomicity - atomowość 
+
+    Transakcja jest niepodzielna. Albo wszystko się wykona albo nic.
+
+- Consistency - spójność 
+
+    Transakcje nie mogą naruszać integralności danych. Serwery muszą przechowywać tę samą bazę i więzy integralności muszą zostać zachowane.
+
+- Isolation - izolacja
+
+    Transakcja nie może widzieć wyników innej niezatwierdzonej transakcji. Musi się ona odbywać w czasie w którym żadna inna nie trwa.
+
+- Durability - trwałość
+
+    Zmiany wprowadzone w transakcji zatwierdzonej muszą być stałe.
+
+### Wielodostęowość - problemy
+
+1. Niespójność odczytów - transakcja odczytuje zmiany wprowadzone przez inną niezatwierdzoną jeszcze transakcję.
+
+2. Niepowtarzalność odczytów - transakcja odczytuje dane kilka razy i dostaje różne wyniki mimo że nie została jeszcze zatwierdzona.
+
+3. Odczyty fantomowe - jedna transakcja dodaje wiersz, druga aktualizuje. Nowy wiersz nie został zaktualizowany. 
+
+### Izalacja 
+
+Transakcje blokują tabele lub ich fragmenty które są im potrzebne. 
+
+- 2PL (strict two-phase locking)
+
+    Transakcja zakłada blokadę na rekord który chce odczytać. Zakłąda też wyłączną transakcję na fragment danych które chce zapisać. Zakładane jest że odczytywane dane będą w tym samym czasie regularne modyfikowane. 
+
+- OCC (optimistic concurrency control)
+
+    Zakłada że w czasie gdy jeden użytkownik odczytuje to inni nie będą modyfikować. Wiele może jednocześnie modyfkiwać i odczytywać ale dokonują zapisu histori operacji. Następnie jeśli wykryto konflikt to jedna z transakcji jest odwoływana. Tylko modyfikujący blokuję innych modyfikujących. 
+
+    **Algorytm**
+
+    1. Begin - zapis czasu startu
+    2. Modify - odczyt i zapis zmian do `WAL` czyli dziennika systemowego w którym indeksowane są operacje. W systemie istnieje też `Undo log` zawierający informacje które w przyszłości należało by wycofać.
+    3. Validate - sprawdzenie czy inne transakcje nie modyfikowały danych które używała bierząca transakcja. 
+    4. Commit/Rollback
+
+> Instrukcje DDL nie są transakcyjne - tworzenia, usuwania, modyfikacji bazy i tabeli nie można wycofać. 
+
+### 2PC (two-phase COMMIT)
+
+Jeden węzeł sieci jest koordynatorem (TM) i działa jako master. Pozostałe węzły to Resource Menagers. Wszystkie węzły uczesniczące w transakcji tworzą *kohortę*. Koordynator rozpoczyna 2PC i członkowie kohorty albo zgadzają się na zapis zmian albo przerywają transakcję. 
+
+- Faza commit request
+
+    1. TM wysyła zapytanie o gotowości wszystkich członków i czeka na odpowiedź.
+    2. Każdy RM wykonuje transakcje aż do punktu w którym wydaje COMMIT a także przygotowuje swój undo log.
+    3. Ci którym się udał pkt 2 zgłaszają koordynatorowi że można zaakceptować transakcję.
+
+- Faza commit (jeśli wszyscy członkowie kohorty zatwierdzili)
+
+    1. TM wysyła polecenie COMMIT do wszystkich członków
+    2. RM zatwierdzają transakcję na swoich węzłach i zwalniają blokady 
+    3. RM wysyłają potwierdzenie do koordynatora
+    4. TM zatwierdza transakcję i zwalnia blokady po otrzymaniu wszystkich potwierdzeń
+
+- Gdy którykolwiek z RM zasygnalizuje brak zgody lub gdy nastąpi timeout
+
+    1. TM wysyła polecenie ROLLBACK do wszystkich członków
+    2. RM wycofują transakcję i zwalniają blokady 
+    3. RM wysyłają potwierdzenie do koordynatora
+    4. TM wycofuje transakcję i zwalnia blokady po otrzymaniu wszystkich potwierdzeń
+
+> Wadą jest blokowanie danych przez członków kohorty, jeśli koordynator ulegnie awarii lub zostanie przerwana komunikacja niektórzy nie będą wiedzieć jak zakończyć transakcję. Wtedy jest timeout i powiadamiają użytkownika ale TM dalej znajduje się w stanie niewiadomym. 
+
+### Blokowanie tabel 
+
+```SQL
+LOCK TABLES nazwa_tabeli [READ | [LOW PRIORITY] WRITE];
+```
+
+`READ` - czytanie tabeli, brak zgody na zapis
+
+`WRITE` - brak zgody innym na zapis i odczyt
+
+`LOW PRIORITY WRITE` - zezwala innym na założenie `READ`
+
+`UNLOCK TABLES;` - zwalnia wszystkie zablokowane przez wątek tabele
+
+
+## Wykład nr 8
+
+---
+
+### Procedury składowane
+
+Używane są do wykonywania powtarzających się i nie wymagających ingerencji użytkownika zadań. 
+
+- Jest to rodzaj skryptu przechowywanego w schemacie bazy
+- Posiada parametry wejściowe, wyjściowe i wartości wynikowe
+- Uruchamiana jak pojedyncza instrukcja 
+
+```SQL
+CREATE PROCEDURE nazwa(parametry)
+    deklaracje lokalne
+    treść procedury;
+```
+
+> Ważne aby redefiniwoać średnik poleceniem `DELIMITER`
+
+Procedurę wywołujemy używająć instrukcji `CALL`
+
+Procedurę usuwamy używając `DROP PROCEDURE nazwa`
+
+Deklaracja zmiennych lokalnych i przypisanie:
+
+```SQL 
+DECLARE nazwa typ;
+
+SET zmienna = wyrażenie;
+```
+
+> Procedury nie mogą zmieniać innych procedur, funkcji i trigerów. Mogą natomiast modyfikować, usuwać, tworzyć tabele i widoki. 
+
+### Parametry wywołania
+
+Parametry są trójkami - tryb, nazwa, typ.
+
+- IN
+
+    Jest to tryb domyślny, przekazuje wartość do programu ze środowiska. Zachowuje się jak stała i nie można mu przypsiać wartości. 
+
+- OUT
+
+    Musi zostać określony, przekazuje wartość do programu ze środowiska. Zachowuje się jak nie zainicjalizowana zmienna. 
+
+- IN OUT
+
+    Musi zostać określony, przekazuje wartość do programu ze środowiska i na odwrót. Zachowuje się jak zainicjalizowana zmienna. 
+
+### Zalety procedur składowanych 
+
+- Mniejsze ryzyko błędu gdy aplikacje używają procedur
+- Zapewniają bezpieczeństwo 
+- Ograniczają liczbę danych przesyłanych między serwerem a klientem
+- Umożliwiają pisanie całych bibliotek
+- Ułatwiają obsługę błędów
+
+### Instrukcje
+
+```SQL
+-- instrukcja warunkowa
+IF warunek THEN
+    instrukcja;
+ELSE 
+    instrukcja;
+END IF;
+```
+
+```SQL
+-- instrukcja case
+CASE zmienna
+    WHEN wartość THEN insturkcja;
+    WHEN wartość THEN insturkcja;
+    ELSE instrukcja;
+END CASE;
+```
+
+```SQL
+-- pętla while
+WHILE warunek DO
+    instrukcje
+END WHILE;
+```
+
+```SQL
+-- pętla repeat
+REPEAT
+    instrukcje
+    UNTIL warunek
+END REPEAT;
+```
+
+```SQL
+-- pętla loop
+LOOP
+    instrukcje
+END LOOP;
+```
+
+> Loop jest etykietowane aby można było ją przerywać stosując instrukcję `LEAVE etykieta`
+
+`ITERATE` ignoruję dalszy fragment pętli i przechodzi do nowej iteracji.
+
+### Funkcje składowane
+
+Nie mają dostęu do danych przechowywanych w bazie i mogą przyjmować tylko parametry wejściowe.
+
+```SQL
+CREATE FUNCTION nazwa(parametry)
+    RETURNS typ
+    deklaracje lokalne
+    treść procedury;
+```
+
+### Kursory
+
+Pozwalają na obsługę tabel wiersz po wierszu. Realuzujemy je używając procedur składowanych. Kursor jest wskaźnikiem na krotkę danych.
+
+### Operacja na kursorze
+
+- Zadeklarowanie `DECLARE nazwa CURSOR FOR zapytanie`
+- Otwarcie `OPEN nazwa`
+- Pobranie wiersza z bazy `FETCH nazwa INTO lista zmiennych`
+- Zamknięcie `CLOSE nazwa`
+
+> Zmiany wprowadzone po otwarciu kursora nie są w nim widoczne.
+
+
+## Wykład nr 9
+
+---
+
+### Przeszukiwanie posortowanego pliku 
+
+Znalezienie wiersza w takim pliku o długości N wymaga dokonania $O(\log_2N)$ porównań i dostępów do dysku. 
+
+> Tabele w bazie nie są posortowane. Zapisywanie za każdym razem sortowanych danych znacząco spowolnił by działanie.
+
+### Indeksy 
+
+Specjalna struktura przechowująca tylko atrybuty względem których sortujemy (klucze sortowania). Wraz z kluczem przechowywany jest fizyczny adres krotki na dysku.
+
+### B-drzewo
+
+1. Jest to drzewo ukorzenione
+2. Każdy węzeł ma nie więcej niż *m* potomków
+3. Każdy węzeł (oprócz korzenia i liści) ma nie mniej niż *m/2* potomków. Jest to zaokrąglane w dół i nazywane **czynnikiem minimalizacji**
+4. Korzeń ma minimum dwóch potomków
+5. Wszystkie liście leżą na tym samym poziomie
+6. Węzeł posiadający *k* potomków ma *k-1* kluczy
+7. Węzeł ma nie więcej niż *m-1* kluczy. Liść natomiast posiada nie mniej niż *(m/2)-1* kluczy
+
+> Budjąc b-drzewo węzły pozostawia się nie do końca wypełnione, ułatwia to później wstawianie nowych elementów.
+
+### Wyszukwianie
+
+Zaczynamy od korzenia, każdy węzeł przeszukujemy przeglądająć kolejne klucze które są w porządku niemalejącym. Gdy znajdziemy wartość większą lub równą poszukiwanej wiemy że poszukwiana wartość znajduje się w poddrzewie którego korzeniem jest znaleziona wartość. Czas przeszukwiania wynosi $O(\log_{m/2}N)$.
+
+### Podział
+
+Medianę węzła dzielonego wstawimy do jego rodzica. Następnie tworzymy nowy węzał i wstawiamy do niego wartośći większe od mediany. Z dzielonego usuwamy medianę i wartości od niej większe. Proces podziału to koszt stału O(m). 
+
+### Wstawianie klucza
+
+Najpierw przeszukujemy drzewo i znajdujemy odpowiedni liść gdzie należy wstawić wartość. Gdy wstawienie powoduje przepełnienie dokonujemy podziałów. Wstawianie kluczy niesie koszt $O(m\log_{m/2}N)$.
+
+### Usuwanie kluczy 
+
+Po usunięciu klucza z drzewa należy je najcześniej zrównoważyć. 
+
+### Indeksy w SQL
+
+Klucz główny zawsze jest indeksem. Gdy chcemy stworzyć klócz główny na kilka kolumn podczas tworzenia tabeli dopisujemy `PRIMARY KEY(kol1, kol2)`. 
+
+Dodatkowe indeksy możemy tworzyć w czasie tworzenia tabeli poprzez `INDEX nazwa (kolumna)` lub osobnym polecniem `CREATE INDEX nazwa on tabela (kolumny)`.
+
+> Efektywność wykorzystania indeksów zależy od tego jak duży procent tabeli zwraca zapytanie. 
+
+### Wymuszanie indeksów
+
+W większości przypadków optymalizator sam wybiera czy używac indeksów i jakich. Gdy chcemy wymusić indeksy możemy użyć:
+
+- przeglądanie ze wskazanym indeksem `SELECT ... FROM tabela USE INDEX (nazwaIndeksu)`
+- przeglądanie ze wskazanym indeksem i zakazem pełnego przeglądania tabeli `SELECT ... FROM tabela FORCE INDEX (nazwaIndeksu)`
+- ignorowanie wskazanego indeksu `SELECT ... FROM tabela USE INDEX (nazwaIndeksu)`
+
+### Update
+
+Przy updatowaniu danych wykorzystująć indeksy możę się zdarzyć że kilkukrotnie zmienimy jedną krotkę ponieważ indeks się przebuduje i ponownie wskaże nam daną krotkę do zmiany. Musimy więc używając indeksów stworzyć tabelę pomocniczą wybranych krotek, dalej przeglądamy tabelę z kluczami krotek które trzeba zmienić i używając indeksu z kluczem głównym zmieniamy krotki w głównej tabeli. 
+
+### Wyszukiwanie pełnokontekstowe 
+
+Służy do znajdywania podanych ciągów znaków. Zakłąda się specjamy indeks `FULLTEXT(kolumny)`. Następnie mamy zapytanie `SELECT` z elementem `WHERE MATCH(kolumny) AGAINST(wzorzec)`.
